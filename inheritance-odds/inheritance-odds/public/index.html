@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inheritance Odds: offspring trait predictor</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=IBM+Plex+Sans:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f2f5f8;--surface:#ffffff;--ink:#14212b;--muted:#566574;--line:#d5dde5;
+  --accent:#2b4c9b;--ok:#2f8f6b;--mid:#c98a14;--hi:#c0443a;--neu:#6a7d92;
+  --ok-t:#e0f2ea;--mid-t:#fbefd3;--hi-t:#f8dcd9;--neu-t:#e6ecf2;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1720;--surface:#17212c;--ink:#e6edf3;--muted:#9aabbb;--line:#2a3745;
+    --accent:#8fb0ff;--ok:#5fcf9f;--mid:#f0b64a;--hi:#ff8c80;--neu:#8ea3b8;
+    --ok-t:#173a2d;--mid-t:#3d3114;--hi-t:#40201e;--neu-t:#212e3b;color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1720;--surface:#17212c;--ink:#e6edf3;--muted:#9aabbb;--line:#2a3745;
+  --accent:#8fb0ff;--ok:#5fcf9f;--mid:#f0b64a;--hi:#ff8c80;--neu:#8ea3b8;
+  --ok-t:#173a2d;--mid-t:#3d3114;--hi-t:#40201e;--neu-t:#212e3b;color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 "IBM Plex Sans",system-ui,sans-serif}
+h1,h2,h3{font-family:"Bricolage Grotesque","IBM Plex Sans",system-ui,sans-serif;line-height:1.15;margin:0}
+main{max-width:1120px;margin:0 auto;padding:40px 20px 64px}
+header h1{font-size:clamp(2rem,6vw,3.2rem);font-weight:700;letter-spacing:-.02em;max-width:16ch}
+header p{color:var(--muted);max-width:60ch;margin:16px 0 0}
+.note{margin:24px 0 0;padding:14px 16px;border:1px solid var(--line);border-left:4px solid var(--mid);background:var(--surface);border-radius:6px;font-size:.92rem;max-width:70ch}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:22px;margin-top:24px}
+.card h2{font-size:1.45rem;font-weight:700}
+.meta{color:var(--muted);font-size:.9rem;margin:4px 0 16px}
+.pick{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+label{display:block;font-size:.85rem;color:var(--muted);margin-bottom:4px}
+select,input[type=number]{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:9px 10px}
+select:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
+.body{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:start}
+.sq{display:grid;grid-template-columns:34px repeat(2,76px);grid-template-rows:30px repeat(2,76px);gap:5px}
+.sq>div{display:flex;align-items:center;justify-content:center;border-radius:6px;font-family:"Bricolage Grotesque",sans-serif;font-weight:700}
+.sq .h{color:var(--muted);font-size:.95rem}
+.sq .c{font-size:1.25rem}
+.t-ok{background:var(--ok-t);color:var(--ok)}.t-mid{background:var(--mid-t);color:var(--mid)}
+.t-hi{background:var(--hi-t);color:var(--hi)}.t-neu{background:var(--neu-t);color:var(--ink)}
+.res{display:grid;gap:10px}
+.row .top{display:flex;justify-content:space-between;gap:12px;font-size:.95rem}
+.row .top b{font-weight:500}
+.bar{height:10px;border-radius:5px;background:var(--bg);overflow:hidden;margin-top:4px}
+.bar i{display:block;height:100%;border-radius:5px;transition:width .25s}
+.f-ok{background:var(--ok)}.f-mid{background:var(--mid)}.f-hi{background:var(--hi)}.f-neu{background:var(--neu)}
+.hgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.range{margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.range div{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:14px}
+.range strong{display:block;font:700 1.5rem "Bricolage Grotesque",sans-serif}
+.range span{color:var(--muted);font-size:.88rem}
+.limits h2{font-size:1.2rem;margin-bottom:10px}
+.limits ul{margin:0;padding-left:20px;color:var(--muted)}
+.limits li{margin:6px 0}
+[hidden]{display:none!important}
+.gt{font-size:1.9rem;font-weight:700;margin:0}
+.gs{color:var(--muted);margin:6px 0 -8px;max-width:60ch}
+.tabs{display:flex;gap:10px;margin-top:16px}
+.tabs button{font:inherit;font-weight:500;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:8px 18px;cursor:pointer}
+.tabs button:hover{border-color:var(--accent)}
+.tabs button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.ddrow{margin-top:16px;max-width:420px}
+.tabs button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.search{margin-top:28px;max-width:420px}
+.search input{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:9px 10px}
+.search input:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
+.out{margin-top:14px;padding:10px 12px;border-left:3px solid var(--hi);background:var(--hi-t);border-radius:4px;font-size:.92rem}
+.inc{display:flex;align-items:center;gap:8px;margin:14px 0 0;font-size:.9rem;color:var(--muted)}
+.inc input{width:auto}
+.big{font:700 2.6rem/1.1 "Bricolage Grotesque",sans-serif}
+.rh{margin-top:20px;padding-top:16px;border-top:1px solid var(--line);max-width:340px}
+.rh .rhout{margin-top:14px;font-size:.92rem;max-width:68ch}
+.rh .rhout p{margin:8px 0}
+[data-off]{display:none!important}
+.grp{display:grid;gap:24px;min-width:0}
+.grp>*{min-width:0}
+.grp .card{margin-top:0}
+.layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:28px;align-items:start;margin-top:8px}
+#side{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);max-height:calc(100vh - 32px);overflow-y:auto;padding:0 4px 8px 0}
+#side h3{font-size:.95rem;font-weight:500;color:var(--muted);margin:20px 0 6px}
+#side button{display:block;width:100%;text-align:left;font:inherit;font-size:.93rem;color:var(--ink);background:none;border:0;border-left:3px solid transparent;padding:7px 10px;border-radius:0 6px 6px 0;cursor:pointer}
+#side button:hover{background:var(--surface)}
+#side button[aria-current="true"]{background:var(--surface);border-left-color:var(--accent);font-weight:500}
+#side button:focus-visible{outline:3px solid var(--accent);outline-offset:-2px}
+#side button[data-all]{font-weight:500;color:var(--accent)}
+@media (max-width:820px){
+  .layout{grid-template-columns:1fr}
+  #side{position:static;max-height:220px;border:1px solid var(--line);border-radius:8px;padding:2px 8px 8px;background:var(--surface)}
+}
+@media (max-width:620px){
+  .pick,.hgrid,.range{grid-template-columns:1fr}
+  .body{grid-template-columns:1fr}
+  .sq{justify-self:start}
+}
+@media (prefers-reduced-motion:reduce){.bar i{transition:none}}
+@media (min-width:821px){.gsel{display:none}}
+@media (max-width:820px){#sidelist{display:none}#side{max-height:none;overflow:visible}}
+.seg{position:relative;display:grid;grid-template-columns:1fr 1fr;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px;margin-bottom:6px}
+.seg i{position:absolute;top:3px;bottom:3px;left:3px;width:calc(50% - 3px);background:var(--ink);border-radius:999px;transition:transform .25s}
+.seg[data-pos="1"] i{transform:translateX(100%)}
+#side .seg button{position:relative;z-index:1;width:auto;text-align:center;border:0;border-radius:999px;background:none;color:var(--ink);padding:8px 10px;font-weight:500}
+#side .seg button:hover{background:none}
+#side .seg button[aria-pressed="true"]{color:var(--bg)}
+@media (prefers-reduced-motion:reduce){.seg i{transition:none}}
+.gsel{max-width:420px;margin:14px 0 0}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>Inheritance odds for a future child</h1>
+  <p>Choose each parent’s result for a gene, and see the chances for their child. The Punnett square shows the four equally likely combinations; the bars add them up.</p>
+  <div class="note">Educational tool, not medical advice. Your selections are sent to this site’s server to work out the odds. They are not stored. For real decisions, talk to a genetic counsellor.</div>
+  <div class="search"><label for="q">Search genes or traits</label><input id="q" type="search" placeholder="e.g. thalassaemia, HBB, milk"></div>
+</header>
+
+<div class="layout">
+  <nav id="side" aria-label="Diseases and traits"></nav>
+  <div id="traits"></div>
+</div>
+
+<section class="card" id="height">
+  <h2>Adult height</h2>
+  <p class="meta">A complex trait: shaped by hundreds of genes and nutrition. This uses the classic mid-parental formula, so treat it as a rough range.</p>
+  <div class="hgrid">
+    <div><label for="hf">Parent 1 height (cm)</label><input id="hf" type="number" min="120" max="230" value="175"></div>
+    <div><label for="hm">Parent 2 height (cm)</label><input id="hm" type="number" min="120" max="230" value="162"></div>
+  </div>
+  <div class="range" id="hres"></div>
+</section>
+
+<section class="card limits">
+  <h2>What this page leaves out on purpose</h2>
+  <ul>
+    <li>An overall survival chance. No scientific model can give this from parental DNA, so the page shows condition-by-condition outlook instead.</li>
+    <li>Polygenic risk scores for diabetes, heart disease and similar conditions. They are weak, and less accurate for Indian ancestry.</li>
+    <li>The child’s sex. Predicting it is restricted under India’s PCPNDT Act.</li>
+    <li>New mutations. Every child carries a few changes neither parent has.</li>
+    <li>Eye colour, hair colour and skin tone. They depend on many genes, so a simple inheritance table would mislead.</li>
+  </ul>
+</section>
+</main>
+
+<script type="module">
+async function api(path,body){
+  const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if(!r.ok){let m=r.statusText;try{m=(await r.json()).error||m}catch(_){}throw new Error(m);}
+  return r.json();
+}
+let T;
+try{
+  const r=await fetch('/api/traits');if(!r.ok)throw new Error(r.statusText);
+  T=await r.json();
+}catch(e){
+  document.getElementById('traits').innerHTML='<div class="card"><b>Could not reach the server.</b> Start it with <code>npm start</code> and open <code>http://localhost:3000</code>.</div>';
+  throw e;
+}
+const pct=x=>Math.round(x*1000)/10+'%';
+function opts(t,sel){
+  return Object.keys(t.geno).map(g=>`<option value="${g}"${g===sel?' selected':''}>${t.geno[g]} (${g})</option>`).join('');
+}
+async function update(t){
+  const el=document.getElementById(t.id);
+  const a=el.querySelector('.p1').value,b=el.querySelector('.p2').value;
+  const n=el._n=(el._n||0)+1;
+  let r;
+  try{r=await api('/api/cross',{traitId:t.id,p1:a,p2:b});}
+  catch(e){el.querySelector('.res').textContent='Could not reach the server.';return;}
+  if(n!==el._n)return;
+  const {cells,results:tot}=r;
+  const head=(s)=>[...s].map(x=>`<div class="h">${x}</div>`).join('');
+  const left=[...b];
+  let sq='<div></div>'+head(a);
+  left.forEach((y,r)=>{sq+=`<div class="h">${y}</div>`+cells.slice(r*2,r*2+2).map(c=>`<div class="c t-${c.tone}">${c.g}</div>`).join('');});
+  el.querySelector('.sq').innerHTML=sq;
+  el.querySelector('.res').innerHTML=Object.entries(tot).sort((x,y)=>y[1].p-x[1].p).map(([l,v])=>
+    `<div class="row"><div class="top"><b>${l}</b><span>${pct(v.p)}</span></div><div class="bar"><i class="f-${v.tone}" style="width:${v.p*100}%"></i></div></div>`).join('');
+  const pHi=r.pAffected;
+  el.dataset.p=pHi;
+  const ow=el.querySelector('.outw');
+  if(ow)ow.innerHTML=(pHi>0&&r.outlook)?'<div class="out"><b>If the child is affected:</b> '+r.outlook+'</div>':'';
+  if(t.id==='rh')rhNote(el);
+  summary();
+}
+async function rhNote(el){
+  let box=el.querySelector('.rh');
+  if(!box){
+    box=document.createElement('div');box.className='rh';
+    box.innerHTML='<label>Which parent is the mother?</label><select class="mom"><option value="1">Parent 1</option><option value="2" selected>Parent 2</option></select><div class="rhout"></div>';
+    el.appendChild(box);
+    box.querySelector('.mom').addEventListener('change',()=>rhNote(el));
+  }
+  let d;
+  try{d=await api('/api/rh',{p1:el.querySelector('.p1').value,p2:el.querySelector('.p2').value,mother:Number(box.querySelector('.mom').value)});}
+  catch(e){box.querySelector('.rhout').textContent='Could not reach the server.';return;}
+  box.querySelector('.rhout').innerHTML=d.paragraphs.map(x=>'<p>'+(x.b?'<b>'+x.b+'</b> ':'')+x.t+'</p>').join('');
+}
+const root=document.getElementById('traits');
+const order=['Diseases','Traits'];
+const catOf=t=>(t.cat==='Everyday traits'||t.id==='abo'||t.id==='rh')?'Traits':'Diseases';
+const DESC={Diseases:'Inherited conditions. Results are probabilities, not diagnoses.',Traits:'Blood groups, everyday features and adult height.'};
+
+let curCat=null,grp=null;
+T.slice().sort((a,b)=>order.indexOf(catOf(a))-order.indexOf(catOf(b))).forEach(t=>{
+  const c=catOf(t);
+  if(c!==curCat){curCat=c;grp=document.createElement('div');grp.className='grp';grp.dataset.cat=c;grp.innerHTML='<h2 class="gt">'+c+'</h2><p class="gs">'+DESC[c]+'</p>';root.appendChild(grp);}
+  const s=document.createElement('section');s.className='card';s.id=t.id;s.dataset.q=(t.name+' '+t.gene+' '+t.mode).toLowerCase();
+  s.innerHTML=`<h2>${t.name}</h2><p class="meta">${t.gene}. ${t.mode}.</p>
+  <div class="pick"><div><label>Parent 1</label><select class="p1">${opts(t,t.def[0])}</select></div>
+  <div><label>Parent 2</label><select class="p2">${opts(t,t.def[1])}</select></div></div>
+  <div class="body"><div class="sq" aria-label="Punnett square"></div><div class="res" aria-live="polite"></div></div>
+  <div class="outw"></div>${catOf(t)==='Diseases'?'<label class="inc"><input type="checkbox" class="incl"> Include in overall summary</label>':''}`;
+  grp.appendChild(s);
+  s.querySelectorAll('select').forEach(x=>x.addEventListener('change',()=>update(t)));
+  const ic=s.querySelector('.incl');if(ic)ic.addEventListener('change',summary);
+  update(t);
+});
+let hSeq=0,hTimer;
+async function height(){
+  const f=parseFloat(document.getElementById('hf').value),m=parseFloat(document.getElementById('hm').value);
+  const out=document.getElementById('hres'),n=++hSeq;
+  if(!(f>0&&m>0)){out.innerHTML='<div><span>Enter both heights in centimetres.</span></div>';return;}
+  let d;
+  try{d=await api('/api/height',{parent1:f,parent2:m});}
+  catch(e){if(n===hSeq){out.innerHTML='<div><span></span></div>';out.querySelector('span').textContent=e.message;}return;}
+  if(n!==hSeq)return;
+  const r=x=>`${x[0]}–${x[1]} cm`;
+  out.innerHTML=`<div><span>If the child is a son</span><strong>${r(d.son)}</strong></div><div><span>If the child is a daughter</span><strong>${r(d.daughter)}</strong></div>`;
+}
+['hf','hm'].forEach(i=>document.getElementById(i).addEventListener('input',()=>{clearTimeout(hTimer);hTimer=setTimeout(height,250);}));
+height();
+let sumSeq=0;
+async function summary(){
+  const box=document.getElementById('sum');if(!box)return;
+  const items=[];
+  document.querySelectorAll('.grp[data-cat="Diseases"] .card').forEach(c=>{
+    const ic=c.querySelector('.incl');if(!ic||!ic.checked)return;
+    items.push({traitId:c.id,p1:c.querySelector('.p1').value,p2:c.querySelector('.p2').value});
+  });
+  const out=box.querySelector('.sres'),n=++sumSeq;
+  if(!items.length){out.innerHTML='<p class="meta">Tick “Include in overall summary” on the conditions you want to combine.</p>';return;}
+  let d;
+  try{d=await api('/api/summary',{items});}
+  catch(e){out.textContent='Could not reach the server.';return;}
+  if(n!==sumSeq)return;
+  out.innerHTML=`<div class="big">${pct(d.pAny)}</div><p class="meta">chance the child is affected by at least one of the ${d.items.length} selected conditions</p>`+d.items.map(i=>`<div class="row"><div class="top"><b>${i.name}</b><span>${pct(i.p)}</span></div><div class="bar"><i class="f-hi" style="width:${i.p*100}%"></i></div></div>`).join('');
+}
+const sm=document.createElement('section');sm.className='card';sm.id='sum';sm.dataset.q='summary overall survival outlook risk';
+sm.innerHTML='<h2>Overall outlook</h2><p class="meta">Combines the conditions you tick below, treating the genes as independent. This is not a chance of survival: no model can give that from parental DNA. Many of these conditions are treatable, and outcomes depend heavily on care.</p><div class="sres res"></div>';
+const dg=[...document.querySelectorAll('.grp')].find(g=>g.dataset.cat==='Diseases');dg.insertBefore(sm,dg.children[2]);summary();
+const hc=document.getElementById('height');hc.dataset.q='adult height tall short stature';
+document.querySelectorAll('.grp').forEach(g=>{if(g.dataset.cat==='Traits')g.appendChild(hc);});
+const q=document.getElementById('q');
+const DEF={Diseases:'cf',Traits:'abo'};
+const groups=[...document.querySelectorAll('.grp')];
+function view(g){
+  const sel=g.querySelector('select'),val=sel.value;
+  const ids=[...sel.options].map(o=>o.value);
+  g.querySelectorAll('.card').forEach(c=>c.toggleAttribute('data-off',!(val==='all'?ids.includes(c.id):c.id===val)));
+}
+function fill(g){
+  const sel=g.querySelector('select'),v=q.value.trim().toLowerCase();
+  const cur=g._cur||DEF[g.dataset.cat];
+  let h='<option value="all">Overall view (all '+g.dataset.cat.toLowerCase()+')</option>';
+  g.querySelectorAll('.card').forEach(c=>{if(v&&!(c.dataset.q||'').includes(v))return;h+='<option value="'+c.id+'">'+c.querySelector('h2').textContent+'</option>';});
+  sel.innerHTML=h;
+  const has=[...sel.options].some(o=>o.value===cur);
+  sel.value=has?cur:(sel.options.length>1?sel.options[1].value:'all');
+  g._cur=sel.value;
+  g.hidden=!!v&&sel.options.length===1;
+  view(g);
+}
+groups.forEach(g=>{
+  const cat=g.dataset.cat;
+  const w=document.createElement('div');w.className='gsel';
+  w.innerHTML='<label for="sel-'+cat+'">Choose from the '+cat.toLowerCase()+' list</label><select id="sel-'+cat+'"></select>';
+  g.querySelector('.gs').after(w);
+  w.querySelector('select').addEventListener('change',e=>{g._cur=e.target.value;view(g);});
+  fill(g);
+});
+const side=document.getElementById('side');
+let activeSec='Diseases';
+side.innerHTML='<div class="seg" data-pos="0" role="group" aria-label="Choose section"><i></i><button type="button" data-go="Diseases" aria-pressed="true">Diseases</button><button type="button" data-go="Traits" aria-pressed="false">Traits</button></div><div id="sidelist"></div>';
+function renderSide(){
+  side.querySelector('.seg').dataset.pos=activeSec==='Traits'?'1':'0';
+  side.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.go===activeSec)));
+  groups.forEach(g=>g.toggleAttribute('data-off',g.dataset.cat!==activeSec));
+  const g=groups.find(x=>x.dataset.cat===activeSec),sel=g.querySelector('select');
+  side.querySelector('#sidelist').innerHTML=[...sel.options].map(o=>'<button type="button" data-v="'+o.value+'"'+(o.value===sel.value?' aria-current="true"':'')+(o.value==='all'?' data-all="1"':'')+'>'+o.textContent+'</button>').join('');
+}
+side.addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.go){activeSec=b.dataset.go;renderSide();return;}
+  if(b.dataset.v){const g=groups.find(x=>x.dataset.cat===activeSec),sel=g.querySelector('select');sel.value=b.dataset.v;g._cur=sel.value;view(g);renderSide();}
+});
+groups.forEach(g=>g.querySelector('select').addEventListener('change',renderSide));
+q.addEventListener('input',()=>{
+  groups.forEach(fill);
+  const a=groups.find(x=>x.dataset.cat===activeSec);
+  if(a.hidden){const o=groups.find(x=>!x.hidden);if(o)activeSec=o.dataset.cat;}
+  renderSide();
+});
+renderSide();
+</script>
+</body>
+</html>
